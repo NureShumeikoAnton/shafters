@@ -13,7 +13,9 @@ func _physics_process(delta):
 	else:
 		velocity = Vector2.ZERO
 
+	look_at(get_global_mouse_position())
+
 	move_and_slide()
 
 func _draw():
-	draw_circle(Vector2.ZERO, 15, Color.RED)
+	draw_circle(Vector2.ZERO, 10, Color.RED)
