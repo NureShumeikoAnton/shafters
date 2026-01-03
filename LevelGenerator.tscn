@@ -33,12 +33,16 @@ texture_region_size = Vector2i(32, 32)
 0:0/7/flip_v = true
 0:0/7/transpose = true
 
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_ss8ix"]
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_yjj0d"]
 texture = ExtResource("3")
 margins = Vector2i(32, 32)
 texture_region_size = Vector2i(32, 32)
 0:0/next_alternative_id = 8
 0:0/0 = 0
+0:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_ss8ix")
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
 0:0/1 = 1
 0:0/1/flip_h = true
@@ -63,6 +67,7 @@ texture_region_size = Vector2i(32, 32)
 [sub_resource type="TileSet" id="2"]
 resource_name = "floor"
 tile_size = Vector2i(32, 32)
+occlusion_layer_0/light_mask = 1
 physics_layer_0/collision_layer = 1
 physics_layer_0/physics_material = SubResource("PhysicsMaterial_ss8ix")
 sources/0 = SubResource("TileSetAtlasSource_ss8ix")
@@ -108,3 +113,5 @@ layout_mode = 2
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/AfflictionsUI/Panel/HBoxContainer"]
 layout_mode = 2
+[node name="Darkness" type="CanvasModulate" parent="."]
+color = Color(0, 0, 0, 1)
