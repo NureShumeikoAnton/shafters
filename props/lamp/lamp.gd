@@ -19,6 +19,9 @@ func _ready() -> void:
 	if interaction_area:
 		interaction_area.body_entered.connect(_on_body_entered)
 		interaction_area.body_exited.connect(_on_body_exited)
+
+	if ConnectionManager:
+		clicked.connect(ConnectionManager.on_lamp_clicked)
 	
 	update_visual()
 

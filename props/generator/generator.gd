@@ -28,6 +28,9 @@ func _ready() -> void:
 		fuel_bar.visible = false
 		fuel_bar.max_value = MAX_FUEL
 		fuel_bar.value = fuel
+
+	if ConnectionManager: 
+		clicked.connect(ConnectionManager.on_generator_clicked)
 	
 	# Draw initial sprite
 	update_visual()
