@@ -1,8 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://br874w1tggjcs"]
+[gd_scene load_steps=11 format=3 uid="uid://br874w1tggjcs"]
 
 [ext_resource type="Script" uid="uid://druor4k332g8o" path="res://player.gd" id="1_xhfnw"]
 [ext_resource type="Script" path="res://limb.gd" id="2_kpjcp"]
 [ext_resource type="Texture2D" uid="uid://xga41r2tdm7c" path="res://textures/flashlight.png" id="3_flash"]
+[ext_resource type="PackedScene" uid="uid://c5a46qc4wu8qh" path="res://inventory_ui.tscn" id="4_cxr5p"]
+[ext_resource type="Script" uid="uid://b8253vbys3mgy" path="res://components/inventory.gd" id="4_e80uo"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_kpjcp"]
 
@@ -115,3 +117,8 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_styles/background = SubResource("StyleBoxFlat_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
 value = 100.0
+
+[node name="InventoryUI" parent="CanvasLayer" instance=ExtResource("4_cxr5p")]
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("4_e80uo")
