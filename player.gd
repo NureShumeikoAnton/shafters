@@ -9,6 +9,10 @@ const POWER_DRAIN_RATE = 5.0  # Power per second when flashlight is on
 var flashlight_power = 100.0  # 0-100%
 var flashlight_on = true
 
+# Generator spawning
+var generator_scene = preload("res://props/generator/generator.tscn")
+var lamp_scene = preload("res://props/lamp/lamp.tscn")
+
 @onready var flashlight = $FlashlightPointLight2D
 @onready var flashlight2 = $FlashlightPointLight2D2
 @onready var power_bar = $CanvasLayer/MarginContainer/VBoxContainer/ProgressBar
@@ -65,9 +69,41 @@ func update_flashlight():
 		flashlight2.energy = energy * 0.05
 
 func _draw():
-	draw_circle(Vector2.ZERO, 15, Color.RED)
+	draw_circle(Vector2.ZERO, 10, Color.RED)
+
+func spawn_generator():
+	var generator = generator_scene.instantiate()
+	# Place generator at player position (or slightly offset)
+	generator.global_position = global_position + Vector2(0, 50)  # 50 pixels below player
+	# Add to level scene (parent of player)
+	get_parent().add_child(generator)
+	# Connect to ConnectionManager
+	generator.clicked.connect(ConnectionManager.on_generator_clicked)
+	print("Generator spawned at: ", generator.global_position)
+
+func spawn_lamp():
+	var lamp = lamp_scene.instantiate()
+	# Place lamp at player position (or slightly offset)
+	lamp.global_position = global_position + Vector2(0, 50)  # 50 pixels below player
+	# Add to level scene (parent of player)
+	get_parent().add_child(lamp)
+	# Connect to ConnectionManager
+	lamp.clicked.connect(ConnectionManager.on_lamp_clicked)
+	print("Lamp spawned at: ", lamp.global_position)
+	# Add to level scene (parent of player)
+	get_parent().add_child(lamp)
+	print("Lamp spawned at: ", lamp.global_position)
 	
 func _input(event: InputEvent):
+	
+	# Spawn generator with "g" key
+	if event is InputEventKey and event.pressed and event.keycode == KEY_G:
+		spawn_generator()
+	
+	# Spawn lamp with "l" key
+	if event is InputEventKey and event.pressed and event.keycode == KEY_L:
+		spawn_lamp()
+	
 	if event.is_action_pressed("HealthUI"):
 		if affliction_ui:
 			affliction_ui.toggle_for_player(self)
