@@ -1,9 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://dixx4567coyp2"]
+[gd_scene load_steps=12 format=3 uid="uid://dixx4567coyp2"]
 
 [ext_resource type="Texture2D" uid="uid://bxgbhs6retuhf" path="res://textures/floor.png" id="1"]
 [ext_resource type="Script" uid="uid://cng3s1jp152nh" path="res://LevelGenerator.gd" id="2"]
 [ext_resource type="Texture2D" uid="uid://mmcd2qok03tc" path="res://textures/wall.png" id="3"]
-[ext_resource type="Script" uid="uid://dyp3snykmhd7k" path="res://afflictions_ui.gd" id="4_yjj0d"]
+[ext_resource type="Script" path="res://afflictions_ui.gd" id="4_yjj0d"]
+[ext_resource type="PackedScene" uid="uid://cqrq1m43p6r0m" path="res://items/pickup/pickup.tscn" id="5_k3mma"]
+[ext_resource type="Resource" uid="uid://i66oqspo1ckn" path="res://items/resources/generator_item.tres" id="6_nweq4"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ss8ix"]
 
@@ -113,5 +115,9 @@ layout_mode = 2
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/AfflictionsUI/Panel/HBoxContainer"]
 layout_mode = 2
+
 [node name="Darkness" type="CanvasModulate" parent="."]
 color = Color(0, 0, 0, 1)
+
+[node name="Pickup" parent="." instance=ExtResource("5_k3mma")]
+item_data = ExtResource("6_nweq4")
