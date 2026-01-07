@@ -1,4 +1,3 @@
-# BleedCureItem.gd
 extends ConsumableItem
 class_name Bandage
 

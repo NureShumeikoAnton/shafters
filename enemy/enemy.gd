@@ -1,13 +1,13 @@
 extends CharacterBody2D
 
-@export var speed: float = 120           # speed toward player
-@export var flee_speed: float = 200      # speed when fleeing light
+@export var speed: float = 120
+@export var flee_speed: float = 200
 @export var flee_duration: float = 2.0 
-@export var bleed_severity_per_second: float = 80  # seconds to keep fleeing after leaving light
+@export var bleed_severity_per_second: float = 80
 
 var is_fleeing: bool = false
 var flee_target: Vector2 = Vector2.ZERO
-var flee_timer: float = 0.0              # counts down when fleeing
+var flee_timer: float = 0.0
 
 @onready var damage_sound: AudioStreamPlayer2D = $Damage
 @onready var player_instance = get_tree().current_scene.get_node("Player")
@@ -21,21 +21,17 @@ func _physics_process(delta):
 	if not player_instance:
 		return
 
-	# check if enemy is in any light
 	var light_info = check_lights()
 	var in_light = light_info[0]
 	var closest_light_pos = light_info[1]
 
 	if in_light:
-		# started fleeing or refreshed timer
 		is_fleeing = true
 		flee_target = closest_light_pos
 		flee_timer = flee_duration
 	elif flee_timer > 0:
-		# keep fleeing for remaining time
 		flee_timer -= delta
 	else:
-		# done fleeing
 		is_fleeing = false
 
 	if is_fleeing:

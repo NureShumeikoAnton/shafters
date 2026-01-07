@@ -6,4 +6,3 @@ class_name ConsumableItem
 
 func use(target: Node) -> void:
 	print("Использован расходник: ", name)
-	# Тут позже допишем лечение через target.get_node("Limbs")

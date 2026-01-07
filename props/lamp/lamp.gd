@@ -3,12 +3,12 @@ extends StaticBody2D
 signal lamp_toggled(is_on: bool)
 signal clicked(lamp)
 
-const FUEL_CONSUMPTION_RATE = 0.5  # Fuel per second when lamp is on
+const FUEL_CONSUMPTION_RATE = 0.5
 
 var is_on = false
 var player_in_range = false
-var connected_generator = null  # Reference to connected generator
-var is_connected = false  # Whether lamp is connected to a generator
+var connected_generator = null
+var is_connected = false
 
 @onready var interaction_area = $InteractionArea
 @onready var light = $LampPointLight2D
@@ -17,7 +17,6 @@ var light_area: Area2D
 var light_collision: CollisionShape2D
 
 func _ready() -> void:
-	# Connect interaction area signals
 
 	if ConnectionManager:
 		clicked.connect(ConnectionManager.on_lamp_clicked)
@@ -27,23 +26,21 @@ func _ready() -> void:
 	light_area.monitorable = true
 	light_area.monitoring = is_on
 	add_child(light_area)
-	light_area.add_to_group("light_areas")  # enemies can find all lights
+	light_area.add_to_group("light_areas")
 
 	light_collision = CollisionShape2D.new()
 	var circle = CircleShape2D.new()
 	light_collision.shape = circle
 	light_area.add_child(light_collision)
-	light_collision.disabled = not is_on  # off when lamp off
+	light_collision.disabled = not is_on
 	update_visual()
 	
 
 func _draw():
-	# Draw small 8x8 rectangle lamp
 	var lamp_color = Color.YELLOW if is_on else Color.DARK_GRAY
 	draw_rect(Rect2(-4, -4, 8, 8), lamp_color)
 
 func _process(delta: float) -> void:
-	# Handle player interaction input
 	if player_in_range and Input.is_action_just_pressed("ui_accept"):
 		toggle()
 
@@ -65,7 +62,7 @@ func turn_off():
 		lamp_toggled.emit(false)
 
 func update_visual():
-	queue_redraw()  # redraw lamp rectangle
+	queue_redraw()
 	
 	if light:
 		light.enabled = is_on
@@ -76,17 +73,14 @@ func update_visual():
 			light2.color = Color.YELLOW
 			light2.energy = 0.15
 
-	# --- Sync the collision area ---
 	if light_area and light_collision:
 		light_area.monitoring = is_on
 		light_collision.disabled = not is_on
-		# Update radius to match visual light energy
 		var circle = light_collision.shape as CircleShape2D
 		circle.radius = light.energy * 35
 
 
 func on_generator_state_changed(generator_is_on: bool):
-	# Called when connected generator changes state
 	if is_connected:
 		if generator_is_on:
 			turn_on()
@@ -99,7 +93,6 @@ func _input_event(viewport, event, shape_idx):
 			print("Lamp clicked at: ", global_position)
 			clicked.emit(self)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			# Right-click to disconnect from generator
 			if is_connected and connected_generator:
 				print("Disconnecting lamp from generator")
 				ConnectionManager.disconnect_wire(connected_generator, self)

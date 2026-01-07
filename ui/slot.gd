@@ -1,10 +1,8 @@
 extends Button
 
-# Ссылка на инвентарь и свой индекс, чтобы знать, что менять
 var inventory_ref: Inventory
 var index: int
 
-# Функция инициализации (вызовем её из InventoryUI)
 func set_slot_data(new_inventory: Inventory, new_index: int, slot_data: SlotData):
 	inventory_ref = new_inventory
 	index = new_index
@@ -26,8 +24,6 @@ func set_slot_data(new_inventory: Inventory, new_index: int, slot_data: SlotData
 		quantity_label.visible = false
 		tooltip_text = ""
 
-# --- DRAG & DROP LOGIC ---
-
 func _get_drag_data(at_position: Vector2):
 	var slot_data = inventory_ref.get_slot_data(index)
 	if not slot_data: return null
@@ -38,7 +34,6 @@ func _get_drag_data(at_position: Vector2):
 	preview.size = Vector2(40, 40)
 	set_drag_preview(preview)
 	
-	# ИЗМЕНЕНИЕ: Передаем ссылку на inventory_ref (откуда тащим)
 	return { 
 		"index": index,
 		"origin_inventory": inventory_ref 
@@ -51,7 +46,6 @@ func _drop_data(at_position: Vector2, data: Variant):
 	var origin_index = data["index"]
 	var origin_inventory = data["origin_inventory"]
 	var target_index = index
-	var target_inventory = inventory_ref # Инвентарь, которому принадлежит ЭТОТ слот (куда бросаем)
+	var target_inventory = inventory_ref
 	
-	# Вызываем новую функцию transfer_slot У ИСХОДНОГО инвентаря
 	origin_inventory.transfer_slot(origin_index, target_inventory, target_index)
