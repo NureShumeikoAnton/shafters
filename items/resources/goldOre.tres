@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3 uid="uid://cndsi6png7gpo"]
+
+[ext_resource type="Script" uid="uid://bbgpmtpuv88yn" path="res://items/item_data.gd" id="1_1ihmt"]
+[ext_resource type="Texture2D" uid="uid://cc7w1mwgoihp8" path="res://textures/GoldOre.png" id="1_5kju4"]
+
+[resource]
+script = ExtResource("1_1ihmt")
+stackable = true
+max_stack_size = 100
+icon = ExtResource("1_5kju4")
+metadata/_custom_type_script = "uid://bbgpmtpuv88yn"

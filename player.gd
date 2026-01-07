@@ -1,6 +1,11 @@
 extends CharacterBody2D
 signal request_tile_break(target_pos)
 
+var death_label: Label
+
+const GOLD_ITEM_PATH = "res://items/resources/goldOre.tres"
+@export var required_gold = 20
+
 const SPEED = 150.0
 @export var affliction_ui: AfflictionDisplay
 const MAX_FLASHLIGHT_ENERGY = 4.0
@@ -22,9 +27,38 @@ var pickup_scene = preload("res://items/pickup/pickup.tscn")
 @onready var inventory: Inventory = $Inventory
 @onready var inventory_ui = $CanvasLayer/InventoryUI
 
+func _process(delta):
+	check_gold_win_condition()
+
+func check_gold_win_condition():
+	var total_gold = 0
+
+	# Only loop through first 5 slots
+	for i in range(20):
+		var slot_data = inventory.get_slot_data(i)
+		if slot_data == null:
+			continue
+		if slot_data.item_data.resource_path == GOLD_ITEM_PATH:
+			total_gold += slot_data.quantity
+
+	if total_gold >= required_gold:
+		game_won()
+
+
 func _ready():
-	var bleed := Bleed.new(21)
-	$Limbs/Lleg.add_affliction(bleed)
+	death_label = Label.new()
+	death_label.text = "YOU DIED\nPress R to restart"
+	death_label.visible = false
+	death_label.modulate = Color.RED
+	death_label.global_position = global_position + Vector2(get_viewport().size.x*0.45, get_viewport().size.y*0.05)
+	death_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	death_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+	var canvas = CanvasLayer.new()
+	canvas.layer = 100
+	canvas.add_child(death_label)
+	get_tree().current_scene.add_child(canvas)
+	
 	affliction_ui = get_tree().current_scene.get_node("CanvasLayer/AfflictionsUI")
 	inventory_ui.set_inventory(inventory)
 	inventory_ui.item_triggered.connect(_on_ui_item_triggered)
@@ -59,7 +93,6 @@ func _ready():
 		print("Test: Bandage added to inventory.")
 	else:
 		print("Test: Failed to load Bandage item.")
-	
 
 func _physics_process(delta):
 	# Handle flashlight power
@@ -235,3 +268,17 @@ func destroy_tile():
 
 	# Call the LevelGenerator function
 	emit_signal("request_tile_break", target_pos)
+
+func die():
+	if death_label:
+		death_label.visible = true
+		
+	queue_free()
+
+func game_won():
+	# Show a victory label
+	death_label.text = "YOU WIN!\nPress R to restart"
+	death_label.modulate = Color.GREEN
+	death_label.visible = true
+	
+	queue_free()

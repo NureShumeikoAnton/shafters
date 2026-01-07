@@ -2,15 +2,21 @@ extends CharacterBody2D
 
 @export var speed: float = 120           # speed toward player
 @export var flee_speed: float = 200      # speed when fleeing light
-@export var flee_duration: float = 2.0   # seconds to keep fleeing after leaving light
+@export var flee_duration: float = 2.0 
+@export var bleed_severity_per_second: float = 80  # seconds to keep fleeing after leaving light
 
 var is_fleeing: bool = false
 var flee_target: Vector2 = Vector2.ZERO
 var flee_timer: float = 0.0              # counts down when fleeing
 
-@onready var player_instance = get_tree().current_scene.get_node("Player")  # adjust path if needed
+@onready var player_instance = get_tree().current_scene.get_node("Player")
+@onready var hit_area: Area2D = $Area2D
 
 func _physics_process(delta):
+	if is_instance_valid(player_instance):
+		if hit_area.get_overlapping_bodies().has(player_instance):
+			apply_bleed_to_player(player_instance, delta)
+	
 	if not player_instance:
 		return
 
@@ -54,7 +60,18 @@ func check_lights() -> Array:
 				in_light = true
 
 	return [in_light, closest_pos]
+	
+func apply_bleed_to_player(player: Node, delta: float) -> void:
+	var limbs = player.get_node("Limbs").get_children()
+	if limbs.size() == 0:
+		return
 
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	var limb = limbs[rng.randi_range(0, limbs.size() - 1)]
+
+	var bleed = Bleed.new(bleed_severity_per_second * delta)
+	limb.add_affliction(bleed)
 
 # -----------------------
 # Movement logic
