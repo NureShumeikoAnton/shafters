@@ -1,5 +1,5 @@
-extends Node2D
-
+extends Node2D 
+var pickup_scene = preload("res://items/pickup/pickup.tscn")
 # --- Map generation settings ---
 var width = 100
 var height = 100
@@ -12,6 +12,7 @@ var tile_variations = []
 const TILEMAP_LAYER = 0
 const FLOOR_SOURCE_ID = 0
 const WALL_SOURCE_ID = 1
+const GOLD_SOURCE_ID = 3
 
 @onready var tilemap: TileMap = $TileMap
 
@@ -41,13 +42,14 @@ func _ready():
 	
 	spawn_player(current_map) 
 	spawn_enemies(current_map, enemy_scene, 10)
-	spawn_enemy_near_player(enemy_scene, Vector2(50, 0))  # spawn 10 enemies
+	var total_gold = 0
+	while total_gold < 280:
+		total_gold += generate_gold_veins(current_map, 1, 5, 12)
+	print("Total gold tiles generated: ", total_gold)
 	draw_map_from_array(current_map)
 	player_instance.connect("request_tile_break", Callable(self, "destroy_tile_at_world_pos"))
 
 func spawn_enemy_near_player(enemy_scene: PackedScene, offset: Vector2 = Vector2(50, 0)) -> void:
-
-
 	var enemy_instance = enemy_scene.instantiate()
 	# Place it relative to the player
 	enemy_instance.global_position = player_instance.global_position + offset
@@ -86,6 +88,53 @@ func smooth_map(map: Array, iterations: int) -> Array:
 					new_map[y].append(current_map[y][x])
 		current_map = new_map
 	return current_map
+	
+func generate_gold_veins(map: Array, vein_count: int = 5, min_vein_length: int = 5, max_vein_length: int = 15) -> int:
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	var gold_tiles = 0  # total gold counter
+
+	for v in range(vein_count):
+		# Pick a random wall tile (ignore borders)
+		var x = rng.randi_range(1, width - 2)
+		var y = rng.randi_range(1, height - 2)
+		while map[y][x] != WALL_SOURCE_ID:
+			x = rng.randi_range(1, width - 2)
+			y = rng.randi_range(1, height - 2)
+
+		var vein_tiles = [Vector2i(x, y)]
+		var vein_length = rng.randi_range(min_vein_length, max_vein_length)
+
+		for i in range(vein_length):
+			if vein_tiles.size() == 0:
+				break
+
+			var index = rng.randi_range(0, vein_tiles.size() - 1)
+			var tile = vein_tiles[index]
+
+			# Replace with gold if still a wall
+			if map[tile.y][tile.x] == WALL_SOURCE_ID:
+				map[tile.y][tile.x] = GOLD_SOURCE_ID
+				gold_tiles += 1
+
+			# Add neighboring walls
+			var neighbors = [
+				Vector2i(tile.x + 1, tile.y),
+				Vector2i(tile.x - 1, tile.y),
+				Vector2i(tile.x, tile.y + 1),
+				Vector2i(tile.x, tile.y - 1)
+			]
+
+			for n in neighbors:
+				if n.x > 0 and n.x < width - 1 and n.y > 0 and n.y < height - 1:
+					if map[n.y][n.x] == WALL_SOURCE_ID:
+						vein_tiles.append(n)
+
+			# Remove the processed tile
+			vein_tiles.remove_at(index)
+
+	return gold_tiles
+
 	
 func spawn_enemies(map: Array, enemy_scene: PackedScene, count: int) -> void:
 	var rng = RandomNumberGenerator.new()
@@ -143,7 +192,7 @@ func reveal_area_from(pos: Vector2i, map: Array):
 			continue
 		if revealed[y][x]:
 			continue
-		if map[y][x] == 1:
+		if map[y][x] == WALL_SOURCE_ID or map[y][x] == GOLD_SOURCE_ID:
 			continue  # wall
 		
 		revealed[y][x] = true
@@ -158,29 +207,36 @@ func reveal_area_from(pos: Vector2i, map: Array):
 
 func draw_map_from_array(map: Array) -> void:
 	tilemap.clear_layer(TILEMAP_LAYER)
-	
+
 	for y in range(map.size()):
 		for x in range(map[0].size()):
 			if revealed[y][x]:
+				var tile_id = map[y][x]
+
 				# --- Floor tiles ---
-				if map[y][x] == 0:
-					# Assign variation if not already set
+				if tile_id == FLOOR_SOURCE_ID:
 					if tile_variations[y][x] == -1:
 						tile_variations[y][x] = 1 + randi() % 7
 					var alt_id = tile_variations[y][x]
 					tilemap.set_cell(TILEMAP_LAYER, Vector2i(x, y), FLOOR_SOURCE_ID, Vector2i(0, 0), alt_id)
-				
-				# --- Wall tiles around this floor ---
+
+				# --- Walls and gold adjacent to floors ---
 				for ny in range(y - 1, y + 2):
 					for nx in range(x - 1, x + 2):
 						if nx < 0 or ny < 0 or nx >= width or ny >= height:
 							continue
-						if map[ny][nx] == 1:
-							# Assign wall variation if not already set
+
+						var neighbor_id = map[ny][nx]
+
+						if neighbor_id == WALL_SOURCE_ID or neighbor_id == GOLD_SOURCE_ID:
 							if tile_variations[ny][nx] == -1:
 								tile_variations[ny][nx] = 1 + randi() % 7
-							var wall_alt_id = tile_variations[ny][nx]
-							tilemap.set_cell(TILEMAP_LAYER, Vector2i(nx, ny), WALL_SOURCE_ID, Vector2i(0, 0), wall_alt_id)
+							var alt_id = tile_variations[ny][nx]
+
+							if neighbor_id == WALL_SOURCE_ID:
+								tilemap.set_cell(TILEMAP_LAYER, Vector2i(nx, ny), WALL_SOURCE_ID, Vector2i(0, 0), alt_id)
+							else: # GOLD_SOURCE_ID
+								tilemap.set_cell(TILEMAP_LAYER, Vector2i(nx, ny), GOLD_SOURCE_ID, Vector2i(0, 0), alt_id)
 
 # --- Player spawn ---
 
@@ -214,13 +270,22 @@ func destroy_tile_at_world_pos(world_pos: Vector2) -> void:
 	var local_pos = tilemap.to_local(world_pos)
 	var cell : Vector2i = tilemap.local_to_map(local_pos)
 
-	# Check if there is a wall in the map array, not just the TileMap
-	if current_map[cell.y][cell.x] != WALL_SOURCE_ID:
-		print("No wall tile at ", cell)
-		return
-	if cell.x == 0 or cell.y == 0 or cell.x == width - 1 or cell.y == height - 1:
+	if cell.x <= 0 or cell.y <= 0 or cell.x >= width - 1 or cell.y >= height - 1:
 		print("Cannot destroy border tile at ", cell)
 		return	
+	# Check if there is a wall in the map array, not just the TileMap
+	var tile_id = current_map[cell.y][cell.x]
+
+	# Only destroy walls or gold
+	if tile_id != WALL_SOURCE_ID and tile_id != GOLD_SOURCE_ID:
+		print("No wall or gold tile at ", cell)
+		return
+		
+	if tile_id == GOLD_SOURCE_ID:
+		drop_gold_at(cell)  # drop the gold pickup
+
+	#if tile_id == GOLD_SOURCE_ID:
+		
 
 	# Update the map array
 	current_map[cell.y][cell.x] = FLOOR_SOURCE_ID
@@ -233,3 +298,33 @@ func destroy_tile_at_world_pos(world_pos: Vector2) -> void:
 
 	# Redraw all revealed tiles
 	draw_map_from_array(current_map)
+	
+func restart_scene():
+	get_tree().reload_current_scene()
+	
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_R:
+			restart_scene()	
+			
+func drop_gold_at(cell: Vector2i):
+	if not pickup_scene:
+		return
+
+	var pickup = pickup_scene.instantiate()
+	
+	# Set the item type to a gold resource (create an ItemData for gold if you don't have one)
+	var gold_item = preload("res://items/resources/goldOre.tres")  # or whatever your gold item is
+	pickup.item_data = gold_item
+
+	# Place pickup in the world (center of tile + optional random offset)
+	var tile_pos = tilemap.map_to_local(cell)
+	var random_offset = Vector2(randf_range(-10, 10), randf_range(-10, 10))
+	pickup.global_position = tile_pos + random_offset
+
+	# Add to scene
+	get_parent().add_child(pickup)
+
+	# Temporarily disable pickup (if your Pickup has that function)
+	if pickup.has_method("disable_pickup_temporarily"):
+		pickup.disable_pickup_temporarily(0.7)

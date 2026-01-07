@@ -6,6 +6,8 @@ func _init(_severity := 0.0):
 	severity = _severity
 
 func update(limb, delta):
+	if severity >= 100.0:
+		limb.kill()
 	if severity < 20:
 		severity -= 0.1 * delta
 	else:

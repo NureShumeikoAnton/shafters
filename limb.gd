@@ -11,13 +11,10 @@ func _process(delta):
 		if aff.severity <= 0:
 			afflictions.remove_at(i)
 
-
 func add_affliction(new_aff: Affliction):
 	for a in afflictions:
 		if a.id == new_aff.id:
 			a.severity += new_aff.severity
-			if new_aff.duration > 0:
-				a.duration = max(a.duration, new_aff.duration)
 			return
 	afflictions.append(new_aff)
 
@@ -34,3 +31,6 @@ func has_affliction(id: String) -> bool:
 		if a.id == id:
 			return true
 	return false
+	
+func kill():
+	owner.die()
